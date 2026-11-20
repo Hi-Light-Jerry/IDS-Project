@@ -16,19 +16,78 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r load-lib, message = FALSE}
 library(tidyverse)
-# Add any other libraries here
+library(lubridate)
 
 
 
 ```
 
-
+## Import and check the data
 ```{r load-data}
-# load your data 
+# Use simple column names because the original temperature headers contain degree symbols.
+bikes <- read_csv(
+  "data/SeoulBikeData.csv",
+  skip = 1,
+  col_names = c(
+    "date", "rentals", "hour", "temperature_c", "humidity_pct",
+    "wind_speed_ms", "visibility_10m", "dew_point_c", "solar_radiation",
+    "rainfall_mm", "snowfall_cm", "season", "holiday", "functioning"
+  ),
+  col_types = cols(date = col_date(format = "%d/%m/%Y"))
+)
 
-
-
-
+glimpse(bikes)
+summarise(bikes, first_date = min(date), last_date = max(date))
+count(bikes, functioning)
 ```
 
+## Classify working and non-working days
 
+```{r prepare-day-type}
+# Compare hours when the bike service was operating.
+bikes_open <- bikes %>%
+  filter(functioning == "Yes") %>%
+  mutate(
+    weekday = wday(date),
+    # Public holidays belong to the non-working group even when they fall on a weekday.
+    day_type = if_else(
+      weekday == 1 | weekday == 7 | holiday == "Holiday",
+      "Non-working day",
+      "Working day"
+    )
+  )
+
+count(bikes_open, day_type)
+```
+
+## Calculate mean hourly rentals
+
+```{r summarise-hourly-rentals}
+# Keep the sample size because the two day types contain different numbers of observations.
+hourly_rentals <- bikes_open %>%
+  group_by(season, day_type, hour) %>%
+  summarise(
+    n_hours = n(),
+    mean_rentals = mean(rentals)
+  )
+
+# Check one point on each autumn curve before plotting.
+filter(hourly_rentals, season == "Autumn", hour == 8)
+```
+
+## Compare hourly rental patterns across seasons
+
+```{r plot-hourly-rentals}
+# Use the same vertical scale in all four panels so rental levels can be compared across seasons.
+ggplot(
+  data = hourly_rentals,
+  mapping = aes(x = hour, y = mean_rentals, colour = day_type)
+) +
+  geom_line() +
+  facet_wrap(~ season, ncol = 2) +
+  labs(
+    x = "Hour of day",
+    y = "Mean rentals per hour",
+    colour = "Day type"
+  )
+```
