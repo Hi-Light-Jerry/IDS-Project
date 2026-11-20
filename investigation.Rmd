@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load-lib, message = FALSE}
 library(tidyverse)
 library(lubridate)
-
+library(tidymodels)
 
 
 ```
@@ -117,4 +117,45 @@ filter(hourly_gaps, season == "Autumn", hour == 8 | hour == 15)
 hourly_gaps %>%
   group_by(season) %>%
   filter(gap == max(gap))
+```
+## Does the working-day gap at 08:00 vary by season?
+
+```{r model-morning-rentals}
+# Keep one 08:00 observation per operating date so the model retains day-to-day variation.
+morning <- bikes_open %>%
+  filter(hour == 8)
+
+# Allow rental levels to vary by season, with one common working-day gap.
+common_gap <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(rentals ~ season + day_type, data = morning)
+
+# Allow the working-day gap itself to vary by season.
+seasonal_gap <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(rentals ~ season * day_type, data = morning)
+
+glance(common_gap)$adj.r.squared
+glance(seasonal_gap)$adj.r.squared
+```
+
+## Check the residuals of the 08:00 model
+
+```{r check-morning-residuals}
+# Compare each morning's observed rentals with the fitted value for its group.
+morning_check <- morning %>%
+  bind_cols(predict(seasonal_gap, morning)) %>%
+  mutate(residual = rentals - .pred)
+
+# Use the same vertical scale across seasons to compare the spread of the residuals.
+ggplot(morning_check, aes(x = day_type, y = residual)) +
+  geom_boxplot() +
+  facet_wrap(~ season, ncol = 2) +
+  labs(
+    x = "Day type",
+    y = "Observed minus fitted rentals at 08:00"
+  )
+morning_check %>%
+  group_by(season, day_type) %>%
+  summarise(residual_sd = sd(residual))
 ```
