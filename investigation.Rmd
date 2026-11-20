@@ -91,3 +91,30 @@ ggplot(
     colour = "Day type"
   )
 ```
+## Identify the peak rental hour for each curve
+
+```{r identify-peak-hours}
+# Compare all 24 hourly means within each season and day type.
+peak_hours <- hourly_rentals %>%
+  group_by(season, day_type) %>%
+  filter(mean_rentals == max(mean_rentals)) %>%
+  select(season, day_type, hour, mean_rentals)
+
+peak_hours
+```
+## Compare working and non-working days at the same hour
+
+```{r compare-same-hour}
+hourly_gaps <- hourly_rentals %>%
+  # Leave out n_hours so that the two day types line up by season and hour.
+  select(season, hour, day_type, mean_rentals) %>%
+  pivot_wider(names_from = day_type, values_from = mean_rentals) %>%
+  # A positive gap means more rentals on working days.
+  mutate(gap = `Working day` - `Non-working day`)
+
+# Compare the morning and afternoon gaps in autumn.
+filter(hourly_gaps, season == "Autumn", hour == 8 | hour == 15)
+hourly_gaps %>%
+  group_by(season) %>%
+  filter(gap == max(gap))
+```
