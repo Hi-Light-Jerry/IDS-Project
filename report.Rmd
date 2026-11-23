@@ -57,7 +57,7 @@ hourly_rentals <- bikes_open %>%
 
 ## Research Question
 
-Research question: How do [the hourly rental patterns you are measuring] differ between [your two day types] in [the city and seasons you are studying]?
+Research question: How do mean hourly bike rentals differ between working days and non-working days in Seoul across the four seasons?
 
 Two comparisons: the hour of peak rentals for each day type, and the difference in mean rentals at the same hour.
 
