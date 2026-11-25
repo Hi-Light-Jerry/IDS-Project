@@ -67,7 +67,11 @@ Practical relevance: identifying when bicycles are most needed over the course o
 Data source: Seoul Bike Sharing Demand, UCI Machine Learning Repository
 Unit of observation: one hour of recorded bicycle rentals across Seoul
 Study period: 1 December 2017 to 30 November 2018
-
+- Original dataset: 8,760 hourly observations
+- Operating hours included in the analysis: 8,465
+- Non-operating hours excluded: 295
+- Working days: Monday to Friday, excluding public holidays (5,712 operating hours)
+- Non-working days: weekends and public holidays (2,753 operating hours)
 ## Findings
 
 ### Hourly rental patterns by season
@@ -87,7 +91,16 @@ ggplot(
   )
 ```
 
+### Peak times and differences in hourly rentals
 
+| Season | Working-day peak | Non-working-day peak | Gap at 08:00 | Gap at 15:00 |
+|:-------|:-----------------|:---------------------|-------------:|-------------:|
+| Spring | 18:00 | 17:00 | +920 | −263 |
+| Summer | 18:00 | 20:00 | +1,100 | −246 |
+| Autumn | 18:00 | 17:00 | +1,227 | −398 |
+| Winter | 08:00 | 15:00 | +442 | −57 |
+
+*Gap = mean rentals on working days minus mean rentals on non-working days, in bikes per hour. Values are rounded to the nearest whole bike.*
 
 
 ## References
