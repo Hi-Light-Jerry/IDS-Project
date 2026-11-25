@@ -1,7 +1,7 @@
 ---
 title: "Seoul Bike Rentals Across the Seasons"
 subtitle: "Hourly patterns on working and non-working days"
-author: "Kang Shen: Jerry Gu, Roger Wang, Qingxin Geng, Tianao Chen & User5"
+author: "Kang Shen: Jerry Gu, Roger Wang, Qingxin Geng, Tianao Chen & Wenbo Tang"
 institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
 output:
