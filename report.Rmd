@@ -72,6 +72,11 @@ Study period: 1 December 2017 to 30 November 2018
 - Non-operating hours excluded: 295
 - Working days: Monday to Friday, excluding public holidays (5,712 operating hours)
 - Non-working days: weekends and public holidays (2,753 operating hours)
+
+## Methods
+
+Using the 8,465 hours when the service was operating, we calculated mean hourly rentals for each combination of season, day type and hour of day. For each season, we plotted separate curves for working and non-working days and identified the hour with the highest mean on each curve. We then compared the two groups at each hour by subtracting mean rentals on non-working days from mean rentals on working days. The largest positive gap occurred at 08:00 in all four seasons, so we examined the 353 observations recorded at that hour. We fitted two linear models. The first assumed a common working-day gap across seasons, while the second allowed the gap to vary by season. We compared the models using adjusted R² and examined variation within each group using residual boxplots and residual standard deviations from the second model.
+
 ## Findings
 
 ### Hourly rental patterns by season
