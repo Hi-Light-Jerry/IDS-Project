@@ -1,6 +1,6 @@
 ---
-title: "Presentation title"
-subtitle: "Presentation subtitle (if any)"
+title: "Seoul Bike Rentals Across the Seasons"
+subtitle: "Hourly patterns on working and non-working days"
 author: "Team name <br> Names of team members"
 institute: "University of Edinburgh"
 date: "`r Sys.Date()`"
@@ -31,6 +31,7 @@ library(tidymodels)
 library(palmerpenguins)
 library(knitr)
 library(xaringanthemer)
+library(lubridate)
 ```
 
 ```{r setup, include=FALSE}
@@ -40,7 +41,38 @@ knitr::opts_chunk$set(fig.retina = 3, dpi = 300, fig.width = 6, fig.asp = 0.618,
 
 ```{r load-data, include=FALSE}
 # Load your data here
+# Supply column names because the original temperature headers contain degree symbols.
+bikes <- read_csv(
+  "data/SeoulBikeData.csv",
+  skip = 1,
+  col_names = c(
+    "date", "rentals", "hour", "temperature_c", "humidity_pct",
+    "wind_speed_ms", "visibility_10m", "dew_point_c", "solar_radiation",
+    "rainfall_mm", "snowfall_cm", "season", "holiday", "functioning"
+  ),
+  col_types = cols(date = col_date(format = "%d/%m/%Y"))
+)
 
+# Compare rental counts only during hours when the service was operating.
+bikes_open <- bikes %>%
+  filter(functioning == "Yes") %>%
+  mutate(
+    weekday = wday(date),
+    # Sunday is 1 and Saturday is 7. Public holidays also count as non-working days.
+    day_type = if_else(
+      weekday == 1 | weekday == 7 | holiday == "Holiday",
+      "Non-working day",
+      "Working day"
+    )
+  )
+
+# Each group gives one point on a curve. Keep the number of observations behind each mean.
+hourly_rentals <- bikes_open %>%
+  group_by(season, day_type, hour) %>%
+  summarise(
+    n_hours = n(),
+    mean_rentals = mean(rentals)
+  )
 ```
 
 ```{r include=FALSE}
@@ -53,13 +85,26 @@ style_xaringan(
 
 class: center, middle
 
-## A statement of the overall goal / research question
+## How do mean hourly bike rentals differ between working days and non-working days in Seoul across the four seasons?
 
 ---
 
-class: inverse, center, middle
+# Hourly rentals by season and day type
 
-# Section title
+```{r slide-hourly-rentals, echo=FALSE, fig.width=7.5, fig.asp=0.48, out.width="85%"}
+# Keep the same vertical scale across all four seasons.
+ggplot(
+  data = hourly_rentals,
+  mapping = aes(x = hour, y = mean_rentals, colour = day_type)
+) +
+  geom_line() +
+  facet_wrap(~ season, ncol = 2) +
+  labs(
+    x = "Hour of day",
+    y = "Mean rentals per hour",
+    colour = "Day type"
+  )
+```
 
 ---
 
