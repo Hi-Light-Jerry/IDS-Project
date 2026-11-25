@@ -146,7 +146,13 @@ morning_check %>%
   group_by(season, day_type) %>%
   summarise(residual_sd = sd(residual))
 ```
-The standard deviation of the residuals at 8 a.m. on weekdays is larger in every season. Weekday traffic is about 656 vehicles per hour, while non-weekday traffic is about 247 vehicles per hour.
+At 08:00, the residual standard deviation was larger on working days in all four seasons. In spring, it was about 656 rentals per hour on working days and 247 on non-working days.
+
+## Discussion and limitations
+
+On working days, mean hourly rentals peaked at 18:00 in spring, summer and autumn, and at 08:00 in winter. On non-working days, the peak occurred at 15:00 in winter, 17:00 in spring and autumn, and 20:00 in summer. Across all four seasons, 08:00 was the hour when working-day rentals exceeded non-working-day rentals by the largest margin. The size of this morning gap varied considerably, from about 442 rentals per hour in winter to 1,227 in autumn.
+
+The data cover one year in Seoul, so each season was observed only once. A second year of data would help establish whether the same peak times and morning gaps recur. We selected 08:00 after comparing all 24 hours. For the 353 mornings observed at that hour, allowing the working-day gap to vary by season increased the adjusted R² from 0.5973 to 0.6296. This indicates a better fit to the observed mornings. Predictive performance on future mornings remains untested.
 
 ## References
 
