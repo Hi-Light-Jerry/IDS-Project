@@ -101,7 +101,52 @@ ggplot(
 | Winter | 08:00 | 15:00 | +442 | −57 |
 
 *Gap = mean rentals on working days minus mean rentals on non-working days, in bikes per hour. Values are rounded to the nearest whole bike.*
+We compared working-day and non-working-day rentals at each of the 24 hours. We chose 08:00 for a closer look because the largest positive gap occurred at 08:00 in each of the four seasons.
+### Does the working-day gap at 08:00 vary by season?
 
+```{r report-morning-models}
+# Keep one 08:00 observation per operating date.
+morning <- bikes_open %>%
+  filter(hour == 8)
+
+# Estimate one working-day gap shared by all four seasons.
+common_gap <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(rentals ~ season + day_type, data = morning)
+
+# Allow the working-day gap to vary by season.
+seasonal_gap <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(rentals ~ season * day_type, data = morning)
+
+glance(common_gap)$adj.r.squared
+glance(seasonal_gap)$adj.r.squared
+```
+
+At 08:00, the working-day gap ranged from about 442 more rentals per hour in winter to about 1277 more in autumn. The adjusted R² increased from 0.5973 for the common-gap model to 0.6296 for the seasonal-gap model. For the 353 mornings in our sample, this suggests that allowing each season to have different working-day patterns improved the model's fit to the rental data for these 353 mornings.
+
+### How much do rentals vary within each group at 08:00?
+
+```{r report-morning-residuals}
+# Compare each morning's observed rentals with the fitted value for its group.
+morning_check <- morning %>%
+  bind_cols(predict(seasonal_gap, morning)) %>%
+  mutate(residual = rentals - .pred)
+
+# Use the same vertical scale to compare residual spread across seasons.
+ggplot(morning_check, aes(x = day_type, y = residual)) +
+  geom_boxplot() +
+  facet_wrap(~ season, ncol = 2) +
+  labs(
+    x = "Day type",
+    y = "Observed minus fitted rentals at 08:00"
+  )
+
+morning_check %>%
+  group_by(season, day_type) %>%
+  summarise(residual_sd = sd(residual))
+```
+The standard deviation of the residuals at 8 a.m. on weekdays is larger in every season. Weekday traffic is about 656 vehicles per hour, while non-weekday traffic is about 247 vehicles per hour.
 
 ## References
 
