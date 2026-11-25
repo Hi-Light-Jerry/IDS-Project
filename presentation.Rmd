@@ -108,29 +108,55 @@ ggplot(
 
 ---
 
-# Hello World
+# Peak times and the gap at 08:00
 
-- Click the `Knit` button to compile your presentation
+| Season | Working-day peak | Non-working-day peak | Extra rentals on working days at 08:00 |
+|:-------|:----------------:|:--------------------:|---------------------------------------:|
+| Spring | 18:00 | 17:00 | 920 |
+| Summer | 18:00 | 20:00 | 1,100 |
+| Autumn | 18:00 | 17:00 | 1,227 |
+| Winter | 08:00 | 15:00 | 442 |
 
-- Make sure to commit and push all resulting files to your GitHub repo
+We chose 08:00 for a closer look because the largest positive gap occurred at 08:00 in each of the four seasons.
 
 ---
 
-class: inverse, middle, center
+# Does the working-day gap at 08:00 vary by season?
 
-# Using xaringan
+We compared two linear models using the 353 mornings with rental data at 08:00.
+
+| Model | Working-day gap at 08:00 | Adjusted R² |
+|:------|:-------------------------|------------:|
+| Common-gap model | One gap shared by all four seasons | 0.5973 |
+| Seasonal-gap model | A separate gap for each season | 0.6296 |
+
+Allowing the gap to vary by season increased adjusted R² by about 0.032. This indicates a better fit to the observed mornings.
 
 ---
 
-# xaringan
+# How much do rentals vary at 08:00?
 
-- The presentation is created using the `xaringan` package
+```{r slide-morning-residuals, echo=FALSE, fig.width=8, fig.asp=0.45, out.width="85%"}
+# Fit the seasonal-gap model to one observation per operating morning.
+morning <- bikes_open %>%
+  filter(hour == 8)
 
-- Use `---` to separate slides and `--` for incremental builds
+seasonal_gap <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(rentals ~ season * day_type, data = morning)
 
---
+# Compare observed rentals with the fitted value for each morning.
+morning_check <- morning %>%
+  bind_cols(predict(seasonal_gap, morning)) %>%
+  mutate(residual = rentals - .pred)
 
-- Like this
+ggplot(morning_check, aes(x = day_type, y = residual)) +
+  geom_boxplot() +
+  facet_wrap(~ season, ncol = 2) +
+  labs(x = NULL, y = "Observed minus fitted rentals at 08:00")
+```
+
+At 08:00, the residual standard deviation was larger on working days in all four seasons. In spring, it was about 656 rentals per hour on working days and 247 on non-working days.
 
 ---
 
