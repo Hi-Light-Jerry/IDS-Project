@@ -1,6 +1,11 @@
-# Introduction to Data Science, Group Project
 
-This is a template repository for your group project. One of your group members should clone this repository and add the other team members as collaborators. You should also add the `uoeIDS` course GitHub account as a collaborator.
+## Team members
+
+- Jerry Gu(S2785099),Hi-Light-Jerry
+- Roger Wang()
+- Qingxin Geng()
+- Tianao Chen(S3005903),Cxy0714-0221
+- Wenbo Tang(S2929982),Wenbohub1224
 
 ## Repository structure
 
@@ -13,18 +18,12 @@ This is a template repository for your group project. One of your group members 
 
 ## Task list
 
-(Optional) Use the space below to structure your group project and to distribute tasks amongst members. It is not expected that every member makes a contribution to each component of the investigation, but you should aim to share the work fairly that utilises each other's strengths (eg. coding, analysis, report writing, etc.)
-
-- Data
-  - [x] Task 1a
-  - [ ] Task 1b 
-- Summarise
-  - [ ] Task 2a
-  - [ ] Task 2b
-- Visualisation
-  - [ ] Task 3a
-  - [ ] Task 3b
-- Ect.
+- [x] Classify operating hours by season and day type.
+- [x] Compare hourly rental curves and peak times.
+- [x] Fit and compare the two models for 08:00 rentals.
+- [x] Check residual variation by season and day type.
+- [ ] Record tutor feedback and agree on revisions.
+- [ ] Rehearse the presentation as a group.
 
 # Check-in
 
@@ -38,6 +37,8 @@ There will be two check-in points where you will have a discussion with a tutor 
 
 ## Check-in 2 (week 10)
 
-- item 1
-- item 2
-- etc.
+### Progress presented
+
+### Questions for the tutor
+
+### Tutor feedback and agreed next steps
