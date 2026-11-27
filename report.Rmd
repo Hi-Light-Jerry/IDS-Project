@@ -54,6 +54,7 @@ hourly_rentals <- bikes_open %>%
   )
 ```
 
+https://github.com/Hi-Light-Jerry/IDS-Project.git
 
 ## Research Question
 
