@@ -3,7 +3,7 @@
 
 - Jerry Gu(S2785099),Hi-Light-Jerry
 - Roger Wang()
-- Qingxin Geng()
+- Qingxin Geng(S2994685),Peter9985666
 - Tianao Chen(S3005903),Cxy0714-0221
 - Wenbo Tang(S2929982),Wenbohub1224
 
