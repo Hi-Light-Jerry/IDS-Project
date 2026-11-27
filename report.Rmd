@@ -63,11 +63,13 @@ Research question: How do mean hourly bike rentals differ between working days a
 Two comparisons: the hour of peak rentals for each day type, and the difference in mean rentals at the same hour.
 
 Practical relevance: identifying when bicycles are most needed over the course of a day.
+
 ## Data
 
 Data source: Seoul Bike Sharing Demand, UCI Machine Learning Repository
 Unit of observation: one hour of recorded bicycle rentals across Seoul
 Study period: 1 December 2017 to 30 November 2018
+
 - Original dataset: 8,760 hourly observations
 - Operating hours included in the analysis: 8,465
 - Non-operating hours excluded: 295
@@ -108,6 +110,7 @@ ggplot(
 
 *Gap = mean rentals on working days minus mean rentals on non-working days, in bikes per hour. Values are rounded to the nearest whole bike.*
 We compared working-day and non-working-day rentals at each of the 24 hours. We chose 08:00 for a closer look because the largest positive gap occurred at 08:00 in each of the four seasons.
+
 ### Does the working-day gap at 08:00 vary by season?
 
 ```{r report-morning-models}
@@ -133,7 +136,7 @@ At 08:00, the working-day gap ranged from about 442 more rentals per hour in win
 
 ### How much do rentals vary within each group at 08:00?
 
-```{r report-morning-residuals}
+```{r report-morning-residuals, message=FALSE}
 # Compare each morning's observed rentals with the fitted value for its group.
 morning_check <- morning %>%
   bind_cols(predict(seasonal_gap, morning)) %>%
