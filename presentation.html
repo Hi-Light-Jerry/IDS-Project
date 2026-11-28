@@ -4,7 +4,7 @@
     <title>Seoul Bike Rentals Across the Seasons</title>
     <meta charset="utf-8" />
     <meta name="author" content="Kang Shen: Jerry Gu, Roger Wang, Qingxin Geng, Tianao Chen &amp; Wenbo Tang" />
-    <meta name="date" content="2026-11-25" />
+    <meta name="date" content="2026-11-28" />
     <script src="libs/header-attrs-2.32/header-attrs.js"></script>
     <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
@@ -25,7 +25,7 @@ class: center, middle, inverse, title-slide
 ### University of Edinburgh
 ]
 .date[
-### 2026-11-25
+### 2026-11-28
 ]
 
 ---
@@ -42,74 +42,88 @@ class: center, middle, inverse, title-slide
 
 
 
+
+
 class: center, middle
 
-## How do mean hourly bike rentals differ between working days and non-working days in Seoul across the four seasons?
+## How do hourly rental patterns change across seasons and day types?
+
+Two comparisons: the busiest hour within each group, and the difference between groups at the same hour.
 
 ---
 
-# Which hours did we compare?
+# From hourly records to eight curves
 
-We used hourly rental counts from the Seoul Bike Sharing Demand dataset, covering 1 December 2017 to 30 November 2018. The service was operating during 8,465 of the 8,760 recorded hours.
+**One row:** rentals recorded across Seoul in one hour. One rental is one trip count; a person can rent more than once.
 
-| Day type | Days included | Operating hours |
-|:---------|:--------------|----------------:|
-| Working day | Monday to Friday, excluding public holidays | 5,712 |
-| Non-working day | Weekends and public holidays | 2,753 |
+1. **Check coverage.** Dec 2017 to Nov 2018: 365 dates × 24 hours = 8,760 distinct date–hour records. No missing cells or duplicate date–hour pairs.
+2. **Filter operating hours.** Exclude 295 recorded closures (all zero rentals). Retain 8,465 hours: 5,712 working and 2,753 non-working.
+3. **Classify dates.** Working = Monday to Friday excluding public holidays. Non-working = weekends or public holidays.
+4. **Calculate means.** Group by season, day type and clock hour: 4 × 2 × 24 = 192 hourly means.
 
-Each point on a curve shows the mean number of rentals for that season, day type and hour of day.
-
-Source: [UCI Machine Learning Repository](https://doi.org/10.24432/C5F62R)
+[Data: UCI Seoul Bike Sharing Demand](https://doi.org/10.24432/C5F62R)
 
 ---
 
-# Hourly rentals by season and day type
+# How to read the hourly curves
+
+Each point is a **mean**: total rentals in that group divided by its number of operating observations.
 
 &lt;img src="presentation_files/figure-html/slide-hourly-rentals-1.png" alt="" width="85%" /&gt;
 
 ---
 
-# Peak times and the gap at 08:00
+# Peak hours and the working-day gap
 
-| Season | Working-day peak | Non-working-day peak | Extra rentals on working days at 08:00 |
-|:-------|:----------------:|:--------------------:|---------------------------------------:|
-| Spring | 18:00 | 17:00 | 920 |
-| Summer | 18:00 | 20:00 | 1,100 |
-| Autumn | 18:00 | 17:00 | 1,227 |
-| Winter | 08:00 | 15:00 | 442 |
+**Gap** = working-day mean minus non-working-day mean for the same season and clock hour (rentals per hour).
 
-We chose 08:00 for a closer look because the largest positive gap occurred at 08:00 in each of the four seasons.
+| Season | Working peak | Non-working peak | Gap at 08:00 | Gap at 15:00 |
+|:--|:--:|:--:|--:|--:|
+| Spring | 18:00 | 17:00 | +920 | −263 |
+| Summer | 18:00 | 20:00 | +1,100 | −246 |
+| Autumn | 18:00 | 17:00 | +1,227 | −398 |
+| Winter | 08:00 | 15:00 | +442 | −57 |
 
----
-
-# Does the working-day gap at 08:00 vary by season?
-
-We compared two linear models using the 353 mornings with rental data at 08:00.
-
-| Model | Working-day gap at 08:00 | Adjusted R² |
-|:------|:-------------------------|------------:|
-| Common-gap model | One gap shared by all four seasons | 0.5973 |
-| Seasonal-gap model | A separate gap for each season | 0.6296 |
-
-Allowing the gap to vary by season increased adjusted R² by about 0.032. This indicates a better fit to the observed mornings.
+08:00 had the largest **positive** gap in each season when we compared all 24 hours. Values rounded.
 
 ---
 
-# How much do rentals vary at 08:00?
+# Fitted rentals at 08:00
 
-&lt;img src="presentation_files/figure-html/slide-morning-residuals-1.png" alt="" width="85%" /&gt;
+On 353 mornings, let **W = 1** for working days and **W = 0** otherwise. Each fitted equation gives mean rentals for one season.
 
-At 08:00, the residual standard deviation was larger on working days in all four seasons. In spring, it was about 656 rentals per hour on working days and 247 on non-working days.
+
+
+
+|Season |Common gap: fitted rentals |Seasonal gap: fitted rentals |
+|:------|:--------------------------|:----------------------------|
+|Winter |-175.3 + 911.4 W           |132.1 + 442.5 W              |
+|Spring |418.7 + 911.4 W            |413.0 + 919.7 W              |
+|Summer |784.6 + 911.4 W            |653.2 + 1100.2 W             |
+|Autumn |737.4 + 911.4 W            |526.8 + 1227.3 W             |
+
+First term = fitted non-working mean. Coefficient of **W** = fitted working-day gap.
+
+**Adjusted R²** (fit to the observed data, accounting for model size): **0.5973** for the common gap; **0.6296** for seasonal gaps.
 
 ---
 
-# Conclusions and limitations
+# Day-to-day variation at 08:00
 
-- On working days, mean rentals peaked at 18:00 in spring, summer and autumn, and at 08:00 in winter.
-- On non-working days, the peak came at 15:00 in winter, 17:00 in spring and autumn, and 20:00 in summer.
-- In every season, the largest gap between working and non-working days occurred at 08:00. Working days averaged 442 more rentals at that hour in winter and 1,227 more in autumn.
+**Residual** = observed rentals minus fitted rentals. Each box shows the middle half of the residuals in its group.
 
-**Limitation:** The data cover one year in Seoul. A second year would help us check whether these peak times and morning gaps recur.
+&lt;img src="presentation_files/figure-html/slide-morning-residuals-1.png" alt="" width="75%" /&gt;
+
+**Spring, working / non-working:** mean **1,333 / 413**; sample SD **656 / 247** rentals; sample variance **430,648 / 61,052** rentals². SD is the square root of variance.
+
+---
+
+# Findings and limits
+
+- **Observed pattern:** working-day peaks fell at 18:00 in spring, summer and autumn, and at 08:00 in winter. The largest working-day lead came at 08:00 in all four seasons.
+- **Coverage:** every clock hour has a record. During closures, potential demand was unobservable. Our estimates describe operating hours.
+- **Generalisability:** 353 mornings give repeated daily observations, but each season occurs only once. Compare additional years to assess repeatability.
+- **Interpretation:** the counts record rentals. Trip purpose is unknown. We selected 08:00 after comparing the curves; future prediction remains untested.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

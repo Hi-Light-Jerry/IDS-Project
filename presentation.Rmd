@@ -83,30 +83,39 @@ style_xaringan(
 )
 ```
 
+```{r coverage-check, include=FALSE}
+# Verify the full grid rather than inferring complete coverage from the row count alone.
+stopifnot(sum(is.na(bikes)) == 0, n_distinct(bikes$date) == 365,
+          nrow(distinct(bikes, date, hour)) == 8760, nrow(bikes) == 8760,
+          all(bikes$hour %in% 0:23), all(bikes$rentals[bikes$functioning == "No"] == 0))
+```
+
 class: center, middle
 
-## How do mean hourly bike rentals differ between working days and non-working days in Seoul across the four seasons?
+## How do hourly rental patterns change across seasons and day types?
+
+Two comparisons: the busiest hour within each group, and the difference between groups at the same hour.
 
 ---
 
-# Which hours did we compare?
+# From hourly records to eight curves
 
-We used hourly rental counts from the Seoul Bike Sharing Demand dataset, covering 1 December 2017 to 30 November 2018. The service was operating during 8,465 of the 8,760 recorded hours.
+**One row:** rentals recorded across Seoul in one hour. One rental is one trip count; a person can rent more than once.
 
-| Day type | Days included | Operating hours |
-|:---------|:--------------|----------------:|
-| Working day | Monday to Friday, excluding public holidays | 5,712 |
-| Non-working day | Weekends and public holidays | 2,753 |
+1. **Check coverage.** Dec 2017 to Nov 2018: 365 dates × 24 hours = 8,760 distinct date–hour records. No missing cells or duplicate date–hour pairs.
+2. **Filter operating hours.** Exclude 295 recorded closures (all zero rentals). Retain 8,465 hours: 5,712 working and 2,753 non-working.
+3. **Classify dates.** Working = Monday to Friday excluding public holidays. Non-working = weekends or public holidays.
+4. **Calculate means.** Group by season, day type and clock hour: 4 × 2 × 24 = 192 hourly means.
 
-Each point on a curve shows the mean number of rentals for that season, day type and hour of day.
-
-Source: [UCI Machine Learning Repository](https://doi.org/10.24432/C5F62R)
+[Data: UCI Seoul Bike Sharing Demand](https://doi.org/10.24432/C5F62R)
 
 ---
 
-# Hourly rentals by season and day type
+# How to read the hourly curves
 
-```{r slide-hourly-rentals, echo=FALSE, fig.width=7.5, fig.asp=0.48, out.width="85%"}
+Each point is a **mean**: total rentals in that group divided by its number of operating observations.
+
+```{r slide-hourly-rentals, echo=FALSE, fig.width=7.5, fig.asp=0.42, out.width="85%"}
 # Keep the same vertical scale across all four seasons.
 ggplot(
   data = hourly_rentals,
@@ -123,62 +132,77 @@ ggplot(
 
 ---
 
-# Peak times and the gap at 08:00
+# Peak hours and the working-day gap
 
-| Season | Working-day peak | Non-working-day peak | Extra rentals on working days at 08:00 |
-|:-------|:----------------:|:--------------------:|---------------------------------------:|
-| Spring | 18:00 | 17:00 | 920 |
-| Summer | 18:00 | 20:00 | 1,100 |
-| Autumn | 18:00 | 17:00 | 1,227 |
-| Winter | 08:00 | 15:00 | 442 |
+**Gap** = working-day mean minus non-working-day mean for the same season and clock hour (rentals per hour).
 
-We chose 08:00 for a closer look because the largest positive gap occurred at 08:00 in each of the four seasons.
+| Season | Working peak | Non-working peak | Gap at 08:00 | Gap at 15:00 |
+|:--|:--:|:--:|--:|--:|
+| Spring | 18:00 | 17:00 | +920 | −263 |
+| Summer | 18:00 | 20:00 | +1,100 | −246 |
+| Autumn | 18:00 | 17:00 | +1,227 | −398 |
+| Winter | 08:00 | 15:00 | +442 | −57 |
 
----
-
-# Does the working-day gap at 08:00 vary by season?
-
-We compared two linear models using the 353 mornings with rental data at 08:00.
-
-| Model | Working-day gap at 08:00 | Adjusted R² |
-|:------|:-------------------------|------------:|
-| Common-gap model | One gap shared by all four seasons | 0.5973 |
-| Seasonal-gap model | A separate gap for each season | 0.6296 |
-
-Allowing the gap to vary by season increased adjusted R² by about 0.032. This indicates a better fit to the observed mornings.
+08:00 had the largest **positive** gap in each season when we compared all 24 hours. Values rounded.
 
 ---
 
-# How much do rentals vary at 08:00?
+# Fitted rentals at 08:00
 
-```{r slide-morning-residuals, echo=FALSE, fig.width=8, fig.asp=0.45, out.width="85%"}
-# Fit the seasonal-gap model to one observation per operating morning.
-morning <- bikes_open %>%
-  filter(hour == 8)
+On 353 mornings, let **W = 1** for working days and **W = 0** otherwise. Each fitted equation gives mean rentals for one season.
 
-seasonal_gap <- linear_reg() %>%
-  set_engine("lm") %>%
+```{r fit-eight, include=FALSE}
+morning <- bikes_open %>% filter(hour == 8)
+common_gap <- linear_reg() %>% set_engine("lm") %>%
+  fit(rentals ~ season + day_type, data = morning)
+seasonal_gap <- linear_reg() %>% set_engine("lm") %>%
   fit(rentals ~ season * day_type, data = morning)
 
-# Compare observed rentals with the fitted value for each morning.
+# For each season, predict both day types. Their difference is the fitted slope for W.
+fitted_equations <- function(model) {
+  groups <- morning %>% distinct(season, day_type)
+  groups %>% bind_cols(predict(model, groups)) %>%
+    pivot_wider(names_from = day_type, values_from = .pred) %>%
+    mutate(equation = sprintf("%.1f + %.1f W", `Non-working day`,
+                              `Working day` - `Non-working day`)) %>%
+    select(season, equation)
+}
+common_eq <- fitted_equations(common_gap)
+seasonal_eq <- fitted_equations(seasonal_gap)
+```
+
+```{r show-equations, echo=FALSE}
+common_eq %>% left_join(seasonal_eq, by = "season") %>%
+  knitr::kable(col.names = c("Season", "Common gap: fitted rentals", "Seasonal gap: fitted rentals"))
+```
+
+First term = fitted non-working mean. Coefficient of **W** = fitted working-day gap.
+
+**Adjusted R²** (fit to the observed data, accounting for model size): **`r round(glance(common_gap)$adj.r.squared, 4)`** for the common gap; **`r round(glance(seasonal_gap)$adj.r.squared, 4)`** for seasonal gaps.
+
+---
+
+# Day-to-day variation at 08:00
+
+**Residual** = observed rentals minus fitted rentals. Each box shows the middle half of the residuals in its group.
+
+```{r slide-morning-residuals, echo=FALSE, fig.width=8, fig.asp=0.32, out.width="75%"}
 morning_check <- morning %>%
   bind_cols(predict(seasonal_gap, morning)) %>%
   mutate(residual = rentals - .pred)
-
 ggplot(morning_check, aes(x = day_type, y = residual)) +
   geom_boxplot() +
   facet_wrap(~ season, ncol = 2) +
   labs(x = NULL, y = "Observed minus fitted rentals at 08:00")
 ```
 
-At 08:00, the residual standard deviation was larger on working days in all four seasons. In spring, it was about 656 rentals per hour on working days and 247 on non-working days.
+**Spring, working / non-working:** mean **1,333 / 413**; sample SD **656 / 247** rentals; sample variance **430,648 / 61,052** rentals². SD is the square root of variance.
 
 ---
 
-# Conclusions and limitations
+# Findings and limits
 
-- On working days, mean rentals peaked at 18:00 in spring, summer and autumn, and at 08:00 in winter.
-- On non-working days, the peak came at 15:00 in winter, 17:00 in spring and autumn, and 20:00 in summer.
-- In every season, the largest gap between working and non-working days occurred at 08:00. Working days averaged 442 more rentals at that hour in winter and 1,227 more in autumn.
-
-**Limitation:** The data cover one year in Seoul. A second year would help us check whether these peak times and morning gaps recur.
+- **Observed pattern:** working-day peaks fell at 18:00 in spring, summer and autumn, and at 08:00 in winter. The largest working-day lead came at 08:00 in all four seasons.
+- **Coverage:** every clock hour has a record. During closures, potential demand was unobservable. Our estimates describe operating hours.
+- **Generalisability:** 353 mornings give repeated daily observations, but each season occurs only once. Compare additional years to assess repeatability.
+- **Interpretation:** the counts record rentals. Trip purpose is unknown. We selected 08:00 after comparing the curves; future prediction remains untested.
